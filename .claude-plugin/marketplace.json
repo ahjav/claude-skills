@@ -1,0 +1,33 @@
+{
+  "name": "ahjav-skills",
+  "owner": {
+    "name": "ahjav",
+    "url": "https://github.com/ahjav"
+  },
+  "metadata": {
+    "description": "Claude plugins by ahjav",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "application-helper",
+      "source": "./plugins/application-helper",
+      "description": "Run a job search end to end, in any field: search job portals and employer career sites, intake and score job ads, tailor CVs and cover letters from verified facts, walk through applications in the browser, and keep a pipeline and tracker in sync.",
+      "author": {
+        "name": "ahjav"
+      },
+      "homepage": "https://github.com/ahjav/claude-skills/tree/main/plugins/application-helper",
+      "license": "MIT",
+      "keywords": [
+        "job search",
+        "applications",
+        "cv",
+        "resume",
+        "cover letter",
+        "tracker",
+        "notion"
+      ],
+      "category": "productivity"
+    }
+  ]
+}

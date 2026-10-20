@@ -1,0 +1,21 @@
+{
+  "name": "application-helper",
+  "displayName": "Application Helper",
+  "version": "0.6.0",
+  "description": "Run a job search end to end, in any field: search job portals and employer career sites, intake and score job ads, tailor CVs and cover letters from verified facts, walk through applications in the browser, and keep a pipeline and tracker in sync.",
+  "author": {
+    "name": "ahjav"
+  },
+  "keywords": [
+    "job search",
+    "applications",
+    "cv",
+    "resume",
+    "cover letter",
+    "tracker",
+    "notion"
+  ],
+  "homepage": "https://github.com/ahjav/claude-skills/tree/main/plugins/application-helper",
+  "repository": "https://github.com/ahjav/claude-skills",
+  "license": "MIT"
+}
