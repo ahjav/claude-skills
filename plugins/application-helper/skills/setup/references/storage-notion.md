@@ -32,7 +32,7 @@ Scheduled task prompts always name the base page URL, so unattended runs skip th
 
 Properties: Company (title is "<Company>: <Role>"), Role, Score (number), Verdict (select: Apply, Maybe, Skip), Stage (select: To apply, Applied, Interviewing, Offer, Closed), Reason / next step, Deadline (date, with time when the ad gives one), Link (URL), Source, Variant, Added, Applied, Updated (dates).
 
-Each row's page holds, as sections: the `ad.md` content, then toggles "CV" and "Letter" with the `cv.md` and `letter.md` content, then "Log" (the `log.md` lines). Built .docx and .pdf files are uploaded as attachments to the row's page.
+Each row's page holds, as sections: the `ad.md` content, then toggles "CV", "Letter" and "Answers" with the `cv.md`, `letter.md` and `answers.md` content, then "Log" (the `log.md` lines). Built .docx and .pdf files are uploaded as attachments to the row's page.
 
 Stage moves change the Stage property; there are no folders to move. Views: Board by Stage, Table "To apply" sorted by Score, Calendar by Deadline.
 

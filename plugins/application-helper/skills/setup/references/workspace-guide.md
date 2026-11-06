@@ -35,6 +35,7 @@ With the "one folder per stage" option, `2-active` and `3-archive` are replaced 
 | `ad.md` | Snapshot of the ad (ads disappear), score, verdict, fits, gaps, deadline |
 | `cv.md` | Your CV tailored for this role, as text |
 | `letter.md` | The cover letter for this role, as text |
+| `answers.md` | Ready to paste answers to the application form's questions, with character counts and flagged judgment calls |
 | `<Name>-CV-<Company>.docx/.pdf` | The finished files you send, built from the .md |
 | `log.md` | Dated log: what was sent, form answers given, replies, interview dates |
 

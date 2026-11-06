@@ -10,12 +10,26 @@ numbering: true            # prefix role folders with a running number
 experience_filter: stretch # exact | stretch | long_stretch (see job-search)
 filter_requirements: no    # yes = same level applies to must-have skills, tools, certifications, specializations
 
+## ATS boards
+# companies whose openings come from a public applicant system feed that can be fetched
+# (Greenhouse, Lever, Ashby). Searched first, every run, with no browser.
+# Personio, SmartRecruiters and Workable block fetching: list those under employer_sites.
+# Endpoints: job-search references/portals.md, ATS feeds.
+# - name: Example GmbH
+#   ats: greenhouse        # greenhouse | lever | ashby
+#   slug: example          # the company's board id in the feed URL
+ats_boards:
+
 ## Portals
 # one block per portal; access: fetch | browser | api (job-search corrects it on first use)
+# role: search = run every time; discovery = run on discovery_days only, to find new companies
+#   for ats_boards (default discovery for browser portals)
 # - name: LinkedIn
 #   access: browser
+#   role: discovery
 #   url_template: https://www.linkedin.com/jobs/search/?keywords={q}&location={loc}&f_TPR=r604800
 portals:
+discovery_days: mon        # days browser and discovery portals run; empty = every interactive run
 
 ## Employer sites
 # employers that post only on their own site (UN, EU, government, universities, companies)
@@ -31,7 +45,7 @@ employer_sites:
 ## Searches
 saved_searches:            # one per line: terms | location | work mode, e.g. staff nurse | Berlin | on-site
 exclude_terms:             # titles containing these are dropped, e.g. working student, intern
-watch_companies:           # older list of career page URLs; still searched, prefer employer_sites
+watch_companies:           # older list of career page URLs; still searched, prefer ats_boards or employer_sites
 max_results_per_query: 30
 last_run:                  # set by job-search, per portal: <portal>: <timestamp>
 
@@ -74,6 +88,7 @@ letter_name: <First>-<Last>-Cover-Letter-<Company>
 ## Apply run
 apply_mode: link           # link (no browser) | guide | prefill
 personal_data:             # omit | ask | include  (empty = ask once, then save)
+browser_budget: 3          # most browser actions to reach a form; over it, that role falls back to link mode
 
 ## Scoring
 apply_threshold: 70        # at or above: tailor and queue

@@ -26,7 +26,7 @@ After installing, say "set up my job search" to run setup.
 | Skill | Use it to |
 |---|---|
 | `setup` | Create the workspace (local folder or session; Claude Project when available), profile, filter level, portals and searches, CV and letter variants, facts, formats, tracker, scheduled searches and reminders. Explains every folder and file. Run once; rerun any step. |
-| `job-search` | Search your portals and employers' own career sites (UN, EU, government, universities, companies) with your terms (or saved searches), drop postings outside your filter level, and send the rest to job-intake. Uses the Claude app's browser for portals that block AI fetching. Runs on a schedule too. |
+| `job-search` | Search your portals and employers' own career sites (UN, EU, government, universities, companies) with your terms (or saved searches), drop postings outside your filter level, and send the rest to job-intake. Checks your target companies' applicant system feeds (Greenhouse, Lever, Ashby) first, with no browser, and adds new companies it finds on portals. Uses the Claude app's browser for portals that block AI fetching only on interactive runs. Runs on a schedule too. |
 | `job-intake` | Paste links (any job board, browser tabs, saved jobs) or get them from job-search. Checks each role is open, applies the filter level, scores it, files it, records deadlines. |
 | `tailor-application` | Pick the right CV and letter variant (EU, US, FR...), write the tailored CV and cover letter for a role, check every claim against your facts, build DOCX/PDF in your format. |
 | `apply-run` | Go through the queue one role at a time. Default: link plus only the role specific data (files, salary, free text answers). With browser access: guide per field or prefill, always stopping before submit. |
@@ -51,13 +51,13 @@ After installing, say "set up my job search" to run setup.
   3-archive/<nn>-<company>-<role>/     closed, rejected, skipped, withdrawn, offer
 ```
 
-Each role folder holds `ad.md` (snapshot, score, fit, gaps, deadline), `cv.md`, `letter.md`, the built files, and `log.md`. The CV and letter are written as markdown first so they can be reviewed and fact-checked before one source builds the DOCX, PDF and plain text versions. Full explanation: `skills/setup/references/workspace-guide.md`.
+Each role folder holds `ad.md` (snapshot, score, fit, gaps, deadline), `cv.md`, `letter.md`, `answers.md` (form answers), the built files, and `log.md`. The CV and letter are written as markdown first so they can be reviewed and fact-checked before one source builds the DOCX, PDF and plain text versions. Full explanation: `skills/setup/references/workspace-guide.md`.
 
 With `folder_mode: stages` in config, the three folders become one per stage instead (to-apply, applied, interviewing, offer, closed).
 
 ## Storage and scheduled searches
 
-The workspace is a local folder or a Notion base page (Google Drive works the same way). Scheduled searches run as a chain: the main search, a check one hour later that runs it if missed and sends the digest, and a fallback around 13:00. Tasks on the computer cover every portal but run only when it is on; with Notion storage the main search can run in the cloud for portals that allow fetching. Details: `skills/job-search/references/scheduled-runs.md`.
+The workspace is a local folder or a Notion base page (Google Drive works the same way). Scheduled searches run as a chain: the main search, a check one hour later that runs it if missed and sends the digest, and a fallback around 13:00. Scheduled runs never use a browser: they cover company feeds and portals that allow fetching. Tasks on the computer reach a local folder but run only when it is on; with Notion storage the whole chain can run in the cloud. Details: `skills/job-search/references/scheduled-runs.md`.
 
 ## Requirements
 
