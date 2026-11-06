@@ -19,6 +19,7 @@ This folder is where your job search lives. Claude reads and writes these files;
       cv/<variant>.format.md   optional: page size, font, margins for that variant
       letter/<variant>.md  cover letter structure per variant
   searches/                one report per job search run: queries, portals, counts, results
+  feeds/                   written by the feed script, when set up: new matching postings per day
   1-to-apply/<nn>-<company>-<role>/   scored and queued, not sent yet
   2-active/<nn>-<company>-<role>/     applied or interviewing
   3-archive/<nn>-<company>-<role>/    closed: rejected, position closed, skipped, withdrawn, offer done
@@ -35,6 +36,7 @@ With the "one folder per stage" option, `2-active` and `3-archive` are replaced 
 | `ad.md` | Snapshot of the ad (ads disappear), score, verdict, fits, gaps, deadline |
 | `cv.md` | Your CV tailored for this role, as text |
 | `letter.md` | The cover letter for this role, as text |
+| `answers.md` | Ready to paste answers to the application form's questions, with character counts and flagged judgment calls |
 | `<Name>-CV-<Company>.docx/.pdf` | The finished files you send, built from the .md |
 | `log.md` | Dated log: what was sent, form answers given, replies, interview dates |
 

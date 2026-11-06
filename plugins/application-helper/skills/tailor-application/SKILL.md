@@ -66,6 +66,15 @@ Over the page limit: trim content first (weakest bullets, older roles), then tig
 
 When a form takes text instead of a file, produce the letter as plain text under the limit the form states (or config `char_limits`): no header block, keep salutation and sign off, count characters with `wc -m`, and give the count.
 
-## 6. Deliver
+## 6. Form answers
 
-Write the files to the role folder (through the device bridge when the workspace is on the user's computer). With `storage: notion`, put the `cv.md` and `letter.md` text in the row's CV and Letter toggles and upload the built files as attachments to the row. Update the role's pipeline row: next step "ready to apply". Tell the user the file names and any claims that changed; do not paste the full letter unless asked.
+Write `answers.md` in the role folder now, while the ad, facts and letter are already loaded, so apply-run only has to hand them over and never has to open the form to find out what it asks.
+
+- Questions: from `ad.md` **Form questions** when the feed listed them; otherwise the typical questions for the role's ATS in `../apply-run/references/ats-playbooks.md`, plus any questions written in the ad itself.
+- One block per question: the label as the form shows it, the answer (ready to paste, under the stated character limit, with the count for free text), and a flag line for judgment calls (a must-have the user has only partly, a salary figure, a yes/no that is not plainly yes).
+- Free text answers follow the same facts check as the letter (step 3) and the external writing style rules.
+- Leave out fields that are the same on every application (name, contact, links, demographics, consent); the user fills those.
+
+## 7. Deliver
+
+Write the files to the role folder (through the device bridge when the workspace is on the user's computer). With `storage: notion`, put the `cv.md` and `letter.md` text in the row's CV and Letter toggles and upload the built files as attachments to the row. Update the role's pipeline row: next step "ready to apply". With `storage: notion`, `answers.md` goes in an Answers toggle on the row. Tell the user the file names, any claims that changed, and the flagged answers; do not paste the full letter or answers unless asked.

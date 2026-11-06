@@ -9,7 +9,9 @@ Search the portals and employer sites listed in `_profile/config.md` with the us
 
 ## Before starting
 
-Locate the workspace first (local folder or Notion; see `../setup/references/storage-notion.md`, Finding the workspace); with `storage: notion`, the paths below map to Notion pages and the Pipeline database. Read `_profile/config.md` (sections Portals, Employer sites, Searches, Filtering), `_profile/profile.md` (Search section, years of experience) and `pipeline.md`. If `_profile/` is missing, run setup first. If config lists neither portals nor employer sites, ask where to search (offer the ones in `references/portals.md` and `references/employer-sites.md` that fit the user's country and sector), save them to config, then continue.
+Locate the workspace first (local folder or Notion; see `../setup/references/storage-notion.md`, Finding the workspace); with `storage: notion`, the paths below map to Notion pages and the Pipeline database. Read `_profile/config.md` (sections ATS boards, Portals, Employer sites, Searches, Filtering), `_profile/profile.md` (Search section, years of experience) and `pipeline.md`. If `_profile/` is missing, run setup first. If config lists no ATS boards, portals or employer sites, ask where to search (offer the ones in `references/portals.md` and `references/employer-sites.md` that fit the user's country and sector, and ask for target companies to resolve into `ats_boards`), save them to config, then continue.
+
+**Cost rule.** Reading pages in a browser is by far the most expensive thing this skill does: every page goes into the conversation, and paging multiplies it. Search in this order and stop going down the list when the run has enough candidates: ATS feeds, then fetch and api portals, then browser portals. Never use a browser on a scheduled run.
 
 When the user names an employer or sector in the message ("anything at the UN", "German federal jobs"), search those employer sites for this run even if they are not in config, and offer afterwards to save them.
 
@@ -20,13 +22,23 @@ When the user names an employer or sector in the message ("anything at the UN", 
 - Location, work mode and recency come from the message first, then `saved_searches`, then profile.md. Default recency: the last 7 days on an interactive run, the window since the last run on a scheduled run (`last_run` in config, fallback 24 hours).
 - After an interactive run, offer once to save new terms to `saved_searches`.
 
-## 2. Pick the access route per portal
+## 2. ATS boards first
 
-For each portal and employer site, use the route recorded in config (`access: fetch | browser | api`), and learn it on first use:
+**Feed script output.** With `feed_script: yes`, read the day files in `feeds/` written since the last run (`feeds/<yyyy-mm-dd>.json`, see `references/feed-script.md`): their `postings` are the new matches, with descriptions, and the last entry in `runs` says which boards were read and which failed. Use these instead of fetching; the script already applied terms, excludes and locations, so the title pre-filter below only re-checks the level. A board the script read successfully today is done. When no file is newer than the last run, or a board failed in it, say so in the report with the command to run the script, and fetch only the Greenhouse, Lever and Ashby boards yourself as below.
 
-1. **API or fetch**: portals with a public API or plain HTML listing (see `references/portals.md`). Use WebFetch on the search URL built from the portal's `url_template`.
-2. **Browser**: when WebFetch is blocked, empty, or returns a login or consent wall, use the browser. Prefer the built-in browser (the Claude app's own browser pane); read the `built-in-browser` skill before its first use. Fall back to Claude in Chrome only when the built-in browser is unavailable and the user allows it (read the `chrome-browser` skill first). Open the search URL, read results with get_page_text or read_page, scroll or page through up to `max_results_per_query`.
-3. **No browser available**: list the search links for those portals in the final report so the user can open them, and say which portals were not covered. Never work around a block with curl, mirrors or caches.
+Without the script, for each Greenhouse, Lever or Ashby entry in `ats_boards`, WebFetch its listing feed (`references/portals.md`, ATS feeds) and ask only for postings whose title matches the terms, with id, title, location, work mode, date and URL. Apply the recency window to the feed's date. No browser; call again with the given `offset` only when WebFetch says the feed was cut off. Mark a board whose feed fails (404, empty, changed shape) in the run report; after two failed runs in a row, open its careers page once to re-resolve the slug or ATS. Personio, SmartRecruiters and Workable boards are never fetched by Claude: without fresh script output, list them as not covered and recommend setting up the script.
+
+## 3. Pick the access route per portal
+
+Then the portals and employer sites, using the route recorded in config (`access: fetch | browser | api`), learned on first use:
+
+1. **API or fetch**: portals with a public API or plain HTML listing (see `references/portals.md`). Use WebFetch on the search URL built from the portal's `url_template`, and ask for the listing fields only, never the whole page.
+2. **Browser**: only on an interactive run, only for portals whose `role` is `search`, or `discovery` on a day in `discovery_days` (a browser portal without `role`, from an older config, counts as `discovery`). Skip the rest and say so in one line of the report. Prefer the built-in browser (the Claude app's own browser pane); read the `built-in-browser` skill before its first use. Fall back to Claude in Chrome only when the built-in browser is unavailable and the user allows it (read the `chrome-browser` skill first). Open the search URL with the recency filter already in it, read results once with get_page_text (not screenshots, not read_page per element), and page only while new results are inside the window, at most `max_results_per_query`.
+3. **No browser available**, or a browser portal skipped by its role: list its search link in the final report so the user can open it. Never work around a block with curl, mirrors or caches.
+
+### Discovery: turn portal hits into feeds
+
+For every posting found on a portal or aggregator, check its apply link against the board URL shapes in `references/portals.md`. When the company's ATS has a public feed and the company is not yet in `ats_boards`, add `{name, ats, slug}` there and list the additions in the report. Over time the browser portals matter less: they find companies, the feeds keep watching them.
 
 ### Employer sites
 
@@ -42,7 +54,7 @@ Record the route that worked back in config (`access:`), so later and scheduled 
 
 Sign in: never enter credentials. If a portal needs the user signed in, ask the user to sign in in the browser pane once; the session persists. Decline non-essential cookies.
 
-## 3. Collect the candidates
+## 4. Collect the candidates
 
 For each query and portal, collect title, company, location, work mode, posted date, link, and the years or level shown in the listing. Then:
 
@@ -64,18 +76,18 @@ Ranges ("3 to 5 years") use the lower bound. "Nice to have" years do not count. 
 
 Count what each filter dropped; it goes in the report.
 
-## 4. Validate with job-intake
+## 5. Validate with job-intake
 
-Pass the surviving links (or the page text, for browser-read ads) to the job-intake skill as one batch, with `source: job-search`, the query that found each, and the portal. job-intake reads each full ad, checks it is open, re-applies the experience filter to the full text, scores, and files it. Do not create role folders or pipeline rows here.
+All pre-filters run on listing data before anything goes to job-intake; job-intake reads full ads, so every posting dropped here saves a full read. Pass the surviving links to the job-intake skill as one batch, with `source: job-search`, the query that found each, the portal, and for ATS feed hits `ats: <ats>/<slug>/<id>` so job-intake reads the feed's detail instead of the page. For feed script hits, pass the posting as it is in the day file (it carries the description), so job-intake fetches nothing. For browser-read ads, pass the page text already read rather than reopening the page. job-intake reads each full ad, checks it is open, re-applies the experience filter to the full text, scores, and files it. Do not create role folders or pipeline rows here.
 
 On a large batch (more than 15), show the list and the count per portal first on an interactive run, and ask whether to validate all or a subset. On a scheduled run, validate the top 15 by listing recency and keep the rest in the run file.
 
-## 5. Report
+## 6. Report
 
-Write `searches/<yyyy-mm-dd>-<hhmm>.md` in the workspace (a Search runs row with `storage: notion`): queries, portals and route used, counts found / deduped / filtered / validated, the job-intake result table, uncovered portals with their search links, and listings held back. Update `last_run` per portal in config.
+Write `searches/<yyyy-mm-dd>-<hhmm>.md` in the workspace (a Search runs row with `storage: notion`): queries, portals and route used, counts found / deduped / filtered / validated, the job-intake result table, uncovered or skipped portals with their search links, companies added to `ats_boards`, failing feeds, and listings held back. Add a cost line: number of feeds fetched, pages fetched, and pages read in the browser, with the share of Apply roles that came from feeds. A rising browser count is the signal to add more companies to `ats_boards`. Update `last_run` per portal and board in config.
 
 To the user: lead with counts per verdict, then the short job-intake table (company, role, score, verdict, one-line reason), then one line per portal that was not covered and why. Offer tailor-application for the Apply roles.
 
 ## Scheduled runs
 
-When started by a scheduled task, nobody is watching: use saved searches and ask no questions. Follow `references/scheduled-runs.md` for the role named in the prompt (primary, check or fallback): read today's run record first, run only the portals still pending that this environment can reach, update the record, and send the digest when the role calls for it. Write the run report to the same record (local run file or the Search runs row in Notion).
+When started by a scheduled task, nobody is watching: use saved searches and ask no questions. Scheduled runs use ATS feeds and fetch or api portals only; browser portals are recorded as interactive only (not pending) and listed with their links in the digest. Follow `references/scheduled-runs.md` for the role named in the prompt (primary, check or fallback): read today's run record first, run only the portals still pending that this environment can reach, update the record, and send the digest when the role calls for it. Write the run report to the same record (local run file or the Search runs row in Notion).
