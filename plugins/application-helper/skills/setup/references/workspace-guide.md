@@ -19,6 +19,7 @@ This folder is where your job search lives. Claude reads and writes these files;
       cv/<variant>.format.md   optional: page size, font, margins for that variant
       letter/<variant>.md  cover letter structure per variant
   searches/                one report per job search run: queries, portals, counts, results
+  feeds/                   written by the feed script, when set up: new matching postings per day
   1-to-apply/<nn>-<company>-<role>/   scored and queued, not sent yet
   2-active/<nn>-<company>-<role>/     applied or interviewing
   3-archive/<nn>-<company>-<role>/    closed: rejected, position closed, skipped, withdrawn, offer done

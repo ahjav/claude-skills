@@ -7,6 +7,8 @@ Scheduled searches run as a chain of up to three tasks per day, because neither 
 
 No scheduled run uses a browser, wherever it runs: an unattended browser search can spend a large part of the user's usage on one run. Scheduled runs cover `ats_boards` and portals and sites with access `fetch` or `api`; browser portals are left for the next interactive run and listed with their links in the digest. That makes `ats_boards` the main source for scheduled searches, so setup should fill it.
 
+With `feed_script: yes`, the script runs on the user's computer before the primary task (scheduled by the user, `feed-script.md`) and writes `feeds/` into the workspace folder. A task that reads it must reach that folder: with a local workspace every task already needs the computer; with Notion storage, the check task becomes a computer task so it can read `feeds/` through the device bridge, while primary and fallback stay in the cloud.
+
 ## The chain
 
 | Task | Default time | Does |
@@ -37,7 +39,7 @@ Every scheduled run starts by reading today's run record and ends by updating it
 Steps for any role:
 
 1. Read the record. If `status: running` and `started` is less than 40 minutes ago, another run is in progress: end without a message. If older, the earlier run stopped midway: continue from `portals_pending`.
-2. List the ATS boards, portals and employer sites still pending today. Run the boards first, then fetch and api portals; skip browser ones and record them under `interactive_only:` (not pending, so the run can still reach `complete` and check and fallback do not retry them). Mark each done as it finishes; leave the rest pending with the reason (feed failed, sign in needed, site down).
+2. List the ATS boards, portals and employer sites still pending today. Read today's feed script file first when there is one (boards it read are done), then run the remaining boards, then fetch and api portals; skip browser ones and record them under `interactive_only:` (not pending, so the run can still reach `complete` and check and fallback do not retry them). Mark each done as it finishes; leave the rest pending with the reason (feed failed, sign in needed, site down).
 3. Search window per portal: from that portal's `last_run` in config (fallback 24 hours, at most 7 days) to now. Update `last_run` per portal when it completes.
 4. Set `status: complete` when nothing is pending, otherwise `partial`.
 5. Digest (check and fallback roles, or primary in the cloud when no computer task exists): counts per verdict, the new Apply roles, portals still pending and why, the `interactive_only` portals with their search links, plus deadlines in the next 3 days and follow ups due, from the pipeline. Set `digest_sent: yes`. This replaces a separate deadline digest task.

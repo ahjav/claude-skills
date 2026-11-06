@@ -24,7 +24,9 @@ When the user names an employer or sector in the message ("anything at the UN", 
 
 ## 2. ATS boards first
 
-For each entry in `ats_boards`, WebFetch its listing feed (`references/portals.md`, ATS feeds) and ask only for postings whose title matches the terms, with id, title, location, work mode, date and URL. Apply the recency window to the feed's date. No browser; call again with the given `offset` only when WebFetch says the feed was cut off. Mark a board whose feed fails (404, empty, changed shape) in the run report; after two failed runs in a row, open its careers page once to re-resolve the slug or ATS.
+**Feed script output.** With `feed_script: yes`, read the day files in `feeds/` written since the last run (`feeds/<yyyy-mm-dd>.json`, see `references/feed-script.md`): their `postings` are the new matches, with descriptions, and the last entry in `runs` says which boards were read and which failed. Use these instead of fetching; the script already applied terms, excludes and locations, so the title pre-filter below only re-checks the level. A board the script read successfully today is done. When no file is newer than the last run, or a board failed in it, say so in the report with the command to run the script, and fetch only the Greenhouse, Lever and Ashby boards yourself as below.
+
+Without the script, for each Greenhouse, Lever or Ashby entry in `ats_boards`, WebFetch its listing feed (`references/portals.md`, ATS feeds) and ask only for postings whose title matches the terms, with id, title, location, work mode, date and URL. Apply the recency window to the feed's date. No browser; call again with the given `offset` only when WebFetch says the feed was cut off. Mark a board whose feed fails (404, empty, changed shape) in the run report; after two failed runs in a row, open its careers page once to re-resolve the slug or ATS. Personio, SmartRecruiters and Workable boards are never fetched by Claude: without fresh script output, list them as not covered and recommend setting up the script.
 
 ## 3. Pick the access route per portal
 
@@ -76,7 +78,7 @@ Count what each filter dropped; it goes in the report.
 
 ## 5. Validate with job-intake
 
-All pre-filters run on listing data before anything goes to job-intake; job-intake reads full ads, so every posting dropped here saves a full read. Pass the surviving links to the job-intake skill as one batch, with `source: job-search`, the query that found each, the portal, and for ATS feed hits `ats: <ats>/<slug>/<id>` so job-intake reads the feed's detail instead of the page. For browser-read ads, pass the page text already read rather than reopening the page. job-intake reads each full ad, checks it is open, re-applies the experience filter to the full text, scores, and files it. Do not create role folders or pipeline rows here.
+All pre-filters run on listing data before anything goes to job-intake; job-intake reads full ads, so every posting dropped here saves a full read. Pass the surviving links to the job-intake skill as one batch, with `source: job-search`, the query that found each, the portal, and for ATS feed hits `ats: <ats>/<slug>/<id>` so job-intake reads the feed's detail instead of the page. For feed script hits, pass the posting as it is in the day file (it carries the description), so job-intake fetches nothing. For browser-read ads, pass the page text already read rather than reopening the page. job-intake reads each full ad, checks it is open, re-applies the experience filter to the full text, scores, and files it. Do not create role folders or pipeline rows here.
 
 On a large batch (more than 15), show the list and the count per portal first on an interactive run, and ask whether to validate all or a subset. On a scheduled run, validate the top 15 by listing recency and keep the rest in the run file.
 

@@ -63,7 +63,9 @@ Ask the user's field in setup and offer the matching rows. Search URLs here are 
 
 Most companies publish openings through an applicant tracking system with a public feed. A feed returns every opening as structured data: no browser, no page rendering, nothing to scroll, and it reaches the cloud. Once a company is known, its feed is the cheapest and most reliable source, so job-search runs `ats_boards` before any portal.
 
-Feeds that WebFetch can read (checked November 2026); only these go under `ats_boards`:
+All six systems below go under `ats_boards`. The feed script (`feed-script.md`) reads all of them on the user's computer. Without it, Claude reads only the first three with WebFetch.
+
+Feeds that WebFetch can read (checked November 2026):
 
 | ATS | Board URL shapes (detect from links) | Listing feed | Per-job detail | Questions in feed |
 |---|---|---|---|---|
@@ -71,10 +73,10 @@ Feeds that WebFetch can read (checked November 2026); only these go under `ats_b
 | Lever | `jobs.lever.co/<slug>`, `jobs.eu.lever.co/<slug>` | `https://api.lever.co/v0/postings/<slug>?mode=json` (EU: `api.eu.lever.co`); includes `descriptionPlain`, `workplaceType`, `applyUrl` | `…/postings/<slug>/<id>` | No |
 | Ashby | `jobs.ashbyhq.com/<slug>` | `https://api.ashbyhq.com/posting-api/job-board/<slug>?includeCompensation=true`; includes `descriptionPlain`, `isRemote`, `workplaceType`, `applyUrl`, compensation | in the listing | No |
 
-Systems whose public pages and feeds refuse AI fetching (robots.txt), so WebFetch cannot read them: **Personio** (`<slug>.jobs.personio.de` / `.com`, very common in Germany), **SmartRecruiters** (`jobs.smartrecruiters.com/<slug>`), **Workable** (`apply.workable.com/<slug>`). Record those companies under `employer_sites` with `access: browser`, or with `access: fetch` on the company's own careers page when that page lists the openings itself. Still detect them from links, so job-intake can record the **ATS** line and apply-run can use the right playbook.
+Systems whose public pages and feeds refuse AI fetching (robots.txt), so WebFetch cannot read them and Claude never works around that: **Personio** (`<slug>.jobs.personio.de` / `.com`, very common in Germany; feed `https://<slug>.jobs.personio.de/xml`), **SmartRecruiters** (`jobs.smartrecruiters.com/<slug>`; feed `https://api.smartrecruiters.com/v1/companies/<slug>/postings`), **Workable** (`apply.workable.com/<slug>`). Record those companies under `ats_boards` too; the feed script covers them. Without the script, they are covered only when the company's own careers page lists the openings (then also add it under `employer_sites` with `access: fetch`), or through the browser on interactive runs.
 
 How to read a feed with WebFetch: ask for only what the search needs, so the full JSON never enters the conversation. For example: "List postings whose title matches any of: backend engineer, kotlin, java. For each give id, title, location, remote or hybrid if stated, updated or published date, and the posting URL. Ignore the rest." WebFetch reads about the first 100,000 characters of a feed; a large board (Lever and Ashby include full descriptions, so a few dozen openings already fill that) comes back cut off and the result says so. Then call again with the `offset` it gives until the feed is covered.
 
-Resolving a company to its feed: open its careers page once (WebFetch), look for the board URL shapes above in links or embedded scripts, then confirm the feed returns data. Record `{name, ats, slug}` under `ats_boards`. A company on Personio, SmartRecruiters, Workable, Workday, SuccessFactors, Taleo or a custom portal goes under `employer_sites` instead.
+Resolving a company to its feed: open its careers page once (WebFetch), look for the board URL shapes above in links or embedded scripts, then confirm the feed returns data. Record `{name, ats, slug}` under `ats_boards`. For Personio, SmartRecruiters and Workable, read the slug from the board link itself (the WebFetch check will be refused). A company on Workday, SuccessFactors, Taleo or a custom portal goes under `employer_sites` instead.
 
-Older configs list board URLs under `watch_companies`; convert each to an `ats_boards` entry when its ATS is Greenhouse, Lever or Ashby.
+Older configs list board URLs under `watch_companies`; convert each to an `ats_boards` entry when its ATS is one of the six above.

@@ -11,14 +11,19 @@ experience_filter: stretch # exact | stretch | long_stretch (see job-search)
 filter_requirements: no    # yes = same level applies to must-have skills, tools, certifications, specializations
 
 ## ATS boards
-# companies whose openings come from a public applicant system feed that can be fetched
-# (Greenhouse, Lever, Ashby). Searched first, every run, with no browser.
-# Personio, SmartRecruiters and Workable block fetching: list those under employer_sites.
-# Endpoints: job-search references/portals.md, ATS feeds.
+# companies whose openings come from a public applicant system feed. Searched first, every
+# run, with no browser. Greenhouse, Lever and Ashby are read by Claude or the feed script;
+# Personio, SmartRecruiters and Workable only by the feed script (they refuse AI fetching).
+# Endpoints: job-search references/portals.md, ATS feeds. Script: references/feed-script.md.
 # - name: Example GmbH
-#   ats: greenhouse        # greenhouse | lever | ashby
+#   ats: greenhouse        # greenhouse | lever | ashby | personio | smartrecruiters | workable
 #   slug: example          # the company's board id in the feed URL
+#   region: eu             # lever only, for boards on jobs.eu.lever.co
+#   tld: com               # personio only, for boards on .jobs.personio.com
+#   language: de           # personio only, when the ads exist only in German
 ats_boards:
+feed_script: no            # yes = fetch-feeds.mjs runs on the user's computer and writes feeds/
+feed_locations:            # feed script location filter, e.g. Berlin, Germany, Remote (remote roles always pass)
 
 ## Portals
 # one block per portal; access: fetch | browser | api (job-search corrects it on first use)
