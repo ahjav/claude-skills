@@ -94,7 +94,11 @@ test('matching rules', () => {
   assert.equal(titleMayMatch(['node.js developer'], 'Node.js Engineer'), true);
   assert.equal(isExcluded(['working student'], 'Working Student Backend'), true);
   assert.equal(isExcluded(['intern'], 'Internal Tools Engineer'), false);
-  assert.equal(locationOk(['Berlin'], { location: 'Munich', workMode: 'remote' }), true);
+  assert.equal(locationOk(['Berlin', 'Remote'], { location: 'Remote', workMode: 'remote' }), true);
+  assert.equal(locationOk(['Germany', 'Remote'], { location: 'Remote, United States', workMode: 'remote' }), false);
+  assert.equal(locationOk(['Germany', 'Remote'], { location: 'Remote - European Union', workMode: 'remote' }), true);
+  assert.equal(locationOk(['Germany', 'Remote'], { location: 'Remote - European Union; Spain; Germany; Berlin' }), true);
+  assert.equal(locationOk(['Germany'], { location: 'Remote', workMode: 'remote' }), false);
   assert.equal(locationOk(['Berlin'], { location: 'München, Germany' }), false);
   assert.equal(locationOk(['Germany'], { location: 'München, Germany' }), true);
   assert.equal(locationOk([], { location: 'Paris' }), true);

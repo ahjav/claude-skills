@@ -177,14 +177,19 @@ export function isExcluded(exclude, title) {
   });
 }
 
+// Keeps a posting whose location names one of the entries. A remote posting also passes
+// when its location names no place, or only a region that contains them all (Europe, EU,
+// EMEA, worldwide). "Remote, United States" does not pass a Germany filter.
+const OPEN_REGIONS = /\b(europe|european union|eu|emea|worldwide|anywhere|global|international)\b/;
 export function locationOk(locations, posting) {
   if (!locations.length) return true;
-  if (posting.workMode === 'remote') return true;
   const loc = normalizeText(posting.location || '');
-  return locations.some(l => {
-    const n = normalizeText(l);
-    return n === 'remote' ? /remote/.test(loc) : loc.includes(n);
-  });
+  const places = locations.map(normalizeText).filter(n => n !== 'remote');
+  if (places.some(n => loc.includes(n))) return true;
+  const remote = posting.workMode === 'remote' || /remote/.test(loc);
+  if (!remote || !locations.some(l => normalizeText(l) === 'remote')) return false;
+  const rest = loc.replace(/remote|[-,;()/|]/g, ' ').trim();
+  return !rest || OPEN_REGIONS.test(rest);
 }
 
 function clip(s) {
@@ -234,6 +239,8 @@ async function http(url, { method = 'GET', body, accept = 'application/json' } =
       if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
       return accept.includes('json') ? await res.json() : await res.text();
     } catch (err) {
+      // Node reports network errors as "fetch failed" with the reason in err.cause
+      if (err.cause) err.message = `${err.message} (${err.cause.code || err.cause.message})`;
       if (attempt === 2 || /HTTP 4\d\d/.test(err.message)) throw err;
       await sleep(2000);
     }
@@ -550,9 +557,11 @@ async function main() {
     console.log(`${r.company.padEnd(28)} ${r.board.padEnd(32)} ${status}`);
   }
   console.log(`\n${fresh.length} new, ${matched.length} matching in total, ${report.filter(r => !r.ok).length} boards failed.`);
+  const allFailed = report.every(r => !r.ok);
 
   if (args['dry-run']) {
     for (const p of fresh) console.log(`- ${p.company}: ${p.title} (${p.location || p.workMode || 'location not stated'}) ${p.url}`);
+    if (allFailed) process.exit(2);
     return;
   }
 
@@ -567,7 +576,7 @@ async function main() {
   await writeFile(stateFile, JSON.stringify(state, null, 2));
   console.log(`Wrote ${dayFile}`);
 
-  if (report.every(r => !r.ok)) process.exit(2);
+  if (allFailed) process.exit(2);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
