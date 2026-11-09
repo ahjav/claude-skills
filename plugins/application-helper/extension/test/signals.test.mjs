@@ -63,3 +63,34 @@ test('relative dates and url cleaning', () => {
   assert.equal(cleanUrl('https://de.linkedin.com/jobs/view/123?refId=a&trackingId=b&position=3&pageNum=0'), 'https://de.linkedin.com/jobs/view/123');
   assert.equal(cleanUrl('https://x.de/job?id=5&utm_source=g#top'), 'https://x.de/job?id=5');
 });
+
+test('search plan and search URLs', async () => {
+  const { searchPlan, searchUrl } = await import('../lib/config.js');
+  const plan = searchPlan(`portals:
+- name: LinkedIn
+  access: browser (signed-in Chrome; see Browser)
+  url_template: https://www.linkedin.com/jobs/search/?keywords={q}&location={loc}&f_TPR=r86400   # note
+- name: StepStone
+  access: browser
+  url_template: https://www.stepstone.de/jobs/{q}/in-{loc}?ag=age_1
+- name: Jobware
+  access: browser
+  url_template: https://www.jobware.de
+- name: Arbeitnow
+  access: api
+  url_template: https://www.arbeitnow.com/api/job-board-api?q={q}
+employer_sites:
+- name: Bund
+  url: https://www.service.bund.de
+  search_url_template: https://www.service.bund.de/search?q={q}
+saved_searches:            # comment
+  backend engineer, kotlin backend | Germany | any
+  backend engineer | Berlin | any
+  softwareentwickler | München | any   # local: de
+exclude_terms: intern
+`);
+  assert.deepEqual(plan.portals.map(p => [p.name, p.access]), [['LinkedIn', 'browser'], ['StepStone', 'browser'], ['Bund', '']]);
+  assert.deepEqual(plan.terms.map(t => `${t.term}@${t.location}`), ['backend engineer@Germany', 'kotlin backend@Germany', 'softwareentwickler@München']);
+  assert.equal(searchUrl(plan.portals[1].template, 'softwareentwickler', 'München'), 'https://www.stepstone.de/jobs/softwareentwickler/in-muenchen?ag=age_1');
+  assert.equal(searchUrl(plan.portals[0].template, 'backend engineer', 'any'), 'https://www.linkedin.com/jobs/search/?keywords=backend%20engineer&location=&f_TPR=r86400');
+});

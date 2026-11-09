@@ -4,6 +4,7 @@ A Chrome extension that reads job ads and search result lists in your own browse
 
 ## What it does
 
+- **Searches:** lists your portals (from `portals` and `employer_sites` in `_profile/config.md`) times your saved search terms as ready search links. **Next search** opens them one by one in the current tab; what you save from that page is tagged with its portal and term, so the feedback file can tell which searches pay off. Portals Claude can fetch without a browser start unticked; untick terms or portals to keep the daily list short. Progress resets each day.
 - **Job ad pages:** reads the structured `JobPosting` data most job pages embed for search engines (StepStone, Indeed, Greenhouse, Personio, LinkedIn's public pages and many company sites). It gets title, company, location, dates, salary, employment type and the full description, plus signals: the language the ad is written in, the language levels it asks for, and the minimum years.
 - **Search result pages:** finds the repeated result cards and reads every one (title, company, location, date, link) using a **list profile** for that site. The first visit guesses a profile; you can keep it, or capture the page so Claude maps it properly. When a site changes its layout and the profile stops working, the extension guesses again and tells you.
 - **Read ads in the background:** for listings whose title matches your saved search terms, it fetches each ad page with your browser session and reads its `JobPosting` data, one every 1.5 to 2.5 seconds, 30 per batch by default. Ads without that data are marked for a browser read. LinkedIn is off by default: automated reading is against LinkedIn's terms and can get the account restricted.
@@ -19,7 +20,7 @@ It never submits anything, and only reads a site after you allow it for that sit
 
 ## Use
 
-- On a search results page: check the count and first titles, then **Save listings** or **Save and read N ads**. If titles, companies or dates look wrong, click **Ask Claude to map this page**, then tell Claude "map the pending portal" and reload the page.
+- Click **Next search**, then on the results page: check the count and first titles, then **Save listings** or **Save and read N ads**. If titles, companies or dates look wrong, click **Ask Claude to map this page**, then tell Claude "map the pending portal" and reload the page.
 - On a job ad: **Save ad**.
 - Then run a job search in Claude as usual; it picks up the saved file.
 

@@ -22,7 +22,18 @@ try {
   try { ({ chromium } = createRequire(import.meta.url)('playwright')); } catch { chromium = null; }
 }
 
-const CONFIG = `# config
+const config = base => `# config
+## Portals
+portals:
+- name: Fixture Jobs
+  access: browser (signed in)
+  url_template: ${base}/stepstone-like.html?q={q}&l={loc}   # note
+- name: Fetched Site
+  access: fetch
+  url_template: ${base}/x?q={q}
+- name: Some API
+  access: api
+  url_template: ${base}/api?q={q}
 ## Searches
 saved_searches:
   backend engineer | Germany | any
@@ -63,8 +74,6 @@ test('extension side panel end to end', { skip: !chromium && 'playwright not ins
     if (!worker) worker = await context.waitForEvent('serviceworker');
     const extId = new URL(worker.url()).host;
 
-    const site = await context.newPage();
-    await site.goto(`${base}/stepstone-like.html`);
     const panel = await context.newPage();
     await panel.goto(`chrome-extension://${extId}/sidepanel.html`);
     await panel.waitForFunction(() => globalThis.__applicationHelper);
@@ -77,9 +86,20 @@ test('extension side panel end to end', { skip: !chromium && 'playwright not ins
       await w.write(config);
       await w.close();
       await globalThis.__applicationHelper.useRoot(root);
+    }, config(base));
+
+    // the Searches section lists the user's portals x terms; API portals are left out
+    await panel.waitForSelector('text=/3 searches today \\(1 portals × 3 terms\\), 0 done/');
+    const opened = context.waitForEvent('page');
+    await panel.click('#next-search');
+    const site = await opened;
+    await site.waitForLoadState();
+    assert.equal(site.url(), `${base}/stepstone-like.html?q=backend%20engineer&l=Germany`);
+    await panel.waitForSelector('text=/1 done · next: Fixture Jobs, "softwareentwickler"/');
+    await panel.evaluate(async () => {
       const [tab] = await chrome.tabs.query({ url: 'http://127.0.0.1/*' });
       await globalThis.__applicationHelper.analyze(tab);
-    }, CONFIG);
+    });
 
     await panel.waitForSelector('text=5 listings');
     assert.match(await panel.textContent('#workspace-name'), /3 terms/);
@@ -114,6 +134,8 @@ test('extension side panel end to end', { skip: !chromium && 'playwright not ins
     assert.deepEqual(listings.map(l => l.title).sort(), ['Fullstack Developer', 'QA Engineer']);
     assert.ok(ads.every(a => a.description.includes('Berufserfahrung') && a.signals.languages.some(l => l.lang === 'de' && l.level === 'c1')));
     assert.ok(day.postings.every(p => !/utm_source/.test(p.url)));
+    assert.ok(day.postings.every(p => p.query === 'backend engineer' && p.portalName === 'Fixture Jobs'), JSON.stringify(day.postings.map(p => [p.query, p.portalName])));
+    assert.equal(day.runs[0].portal, 'Fixture Jobs');
     assert.deepEqual(day.runs.map(r => r.kind), ['list', 'read-ads']);
     assert.ok(files.portals.some(n => n.endsWith('.json') && n.startsWith('127.0.0.1')), files.portals.join(','));
     assert.ok(files.portals.includes('_pending'));
