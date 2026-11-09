@@ -1,8 +1,11 @@
 # Changelog
 
+## 0.8.1
+- Extension: a Searches section lists the user's portals and employer sites times saved search terms as search links, with a **Next search** walk-through; saved listings are tagged with the portal and term that found them. Portals Claude can fetch start unticked.
+
 ## 0.8.0
 Search, extraction and matching.
-- Chrome extension (`extension/`): a Searches list of the user's portals times saved terms with a **Next search** walk-through (saved listings are tagged with portal and term); reads `JobPosting` data from ad pages and result cards from search pages with learned per-portal list profiles, reads matching ads in the background with the user's session (LinkedIn off by default), and saves to `feeds/browser-<date>.json` in the feed format. "Map the pending portal" lets Claude write a portal's profile once from a captured page.
+- Chrome extension (`extension/`): reads `JobPosting` data from ad pages and result cards from search pages with learned per-portal list profiles, reads matching ads in the background with the user's session (LinkedIn off by default), and saves to `feeds/browser-<date>.json` in the feed format. "Map the pending portal" lets Claude write a portal's profile once from a captured page.
 - Signals on every feed and browser posting: ad language, required language levels, minimum years.
 - Matching before scoring (`job-search/references/matching.md`): pre-filters on duplicates, excludes, title relevance, location, required language level, years, recency and closing date; `_profile/feedback.md` with the user's rules, verdict overrides, and outcomes by source and term, maintained by tracker-sync and used by job-search and job-intake.
 
