@@ -63,7 +63,7 @@ The workspace is a local folder or a Notion base page (Google Drive works the sa
 
 - Node.js with the `docx` package for building documents (`npm i -g docx`), and LibreOffice for PDF conversion. Without them, Claude falls back to the docx and pdf skills.
 - Optional: a browser (the Claude app's built-in browser preferred, Claude in Chrome as fallback) for portals that block fetching and for guide and prefill modes. Without it, job-search lists links for blocked portals and job-intake asks you to paste blocked ads.
-- Optional: the feed script, `scripts/fetch-feeds.mjs` (Node 18 or later, no packages). It runs on your computer on your own schedule, reads your target companies' job feeds (Greenhouse, Lever, Ashby, Personio, SmartRecruiters, Workable) and writes new matches to `feeds/` for job-search. It is the only way Personio, SmartRecruiters and Workable boards are covered, and it uses no Claude usage. Setup installs it; details in `skills/job-search/references/feed-script.md`. Tests: `node --test scripts/test/`.
+- Optional: the feed script, `scripts/fetch-feeds.mjs` (Node 18 or later, no packages). It runs on your computer on your own schedule, reads your target companies' job feeds (Greenhouse, Lever, Ashby, Personio, SmartRecruiters, Workable) and writes new matches to `feeds/` for job-search. It is the only way Personio, SmartRecruiters and Workable boards are covered, and it uses no Claude usage. Setup installs it; details in `skills/job-search/references/feed-script.md`. Tests: `node --test scripts/test/*.test.mjs`.
 - Optional: scheduled tasks for recurring searches and the deadline digest; a calendar connector for deadline events.
 - Optional: a Notion or Google Sheets connector for the tracker.
 
