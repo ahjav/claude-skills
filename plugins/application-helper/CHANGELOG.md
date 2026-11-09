@@ -8,6 +8,7 @@ Lower usage: the browser is now a last resort.
 - job-intake reads ads from the feed when the ATS is known, records an **ATS** line and, for Greenhouse, the form questions in `ad.md`.
 - tailor-application writes `answers.md` (ready to paste form answers with character counts and flags) at tailoring time.
 - apply-run uses `answers.md`, opens the direct form URL, caps browser actions with `browser_budget`, reads a form once as data (JavaScript field read in the playbooks) instead of screenshots, and verifies once at the end. Link mode is the recommended default.
+- job-search and setup add local language equivalents of the search terms (for example German titles for searches in Germany) when the profile's language limits allow roles in that language, saved as `# local: <code>` lines in `saved_searches`.
 - Search reports include a cost line: feeds, fetches and browser pages used.
 
 ## 0.6.0

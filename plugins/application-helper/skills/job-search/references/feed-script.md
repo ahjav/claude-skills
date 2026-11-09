@@ -16,7 +16,7 @@ node "<workspace>/_profile/tools/fetch-feeds.mjs" --workspace "<workspace>"
 
 Options: `--terms "a, b"` and `--locations "a, b"` override config for one run, `--only <slug>` fetches one board, `--dry-run` prints without writing, `--all` reports every match as new, `--verbose` logs each request.
 
-It reads `ats_boards`, `saved_searches` (the terms before the first `|`), `exclude_terms` and `feed_locations` from `_profile/config.md`. Matching: every word of a term appears in the title or description, and at least one in the title. A location filter keeps remote roles and roles whose location contains one of the entries.
+It reads `ats_boards`, `saved_searches` (the terms before the first `|`), `exclude_terms` and `feed_locations` from `_profile/config.md`. Matching: every word of a term appears in the title or description, and at least one in the title. Words split at spaces and punctuation, so `backend entwickler` matches "Backend-Entwickler:in", but a joined compound like "Softwareentwickler" needs its own term; the local language terms job-search adds cover both forms. A location filter keeps remote roles and roles whose location contains one of the entries.
 
 ## Schedule
 

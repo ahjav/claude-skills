@@ -61,6 +61,8 @@ Start with companies, because they are the cheapest source to search: ask for th
 
 Then offer the feed script (`../job-search/references/feed-script.md`) when the workspace is a folder on the user's computer, or the user has one for it: it reads every board on their computer, including Personio, SmartRecruiters and Workable, which Claude cannot read, and costs no usage. Recommend it when any of their companies uses one of those three. On yes: copy `../../scripts/fetch-feeds.mjs` (the plugin's `scripts` folder) to `<workspace>/_profile/tools/fetch-feeds.mjs`, ask for `feed_locations`, set `feed_script: yes`, give the run command and the schedule command for their system with the paths filled in, and ask them to run it once and say when done. Check the first `feeds/` file: boards that failed get their slug, `region`, `tld` or `language` fixed now.
 
+When saving `saved_searches`, add local language equivalents of the terms for each search country as job-search describes (step 1, Local language terms), within the profile's language limits, and show them in one line.
+
 Then ask which job portals the user uses (free text, plus a multi-select of the portals in `../job-search/references/portals.md` that fit their country and field: the general ones plus the "By field" rows for their occupation). Record each under `portals` in config with its `url_template`, the `access` route from the catalog, and `role` (`search` for fetch and api portals, `discovery` for browser portals unless the user wants it on every run). Ask on which day discovery portals run (`discovery_days`, default Monday). Ask for:
 
 - Search terms (several allowed), locations, work mode, and terms to exclude. Save as `saved_searches` and `exclude_terms`.
