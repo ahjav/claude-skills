@@ -9,6 +9,9 @@ Lower usage: the browser is now a last resort.
 - tailor-application writes `answers.md` (ready to paste form answers with character counts and flags) at tailoring time.
 - apply-run uses `answers.md`, opens the direct form URL, caps browser actions with `browser_budget`, reads a form once as data (JavaScript field read in the playbooks) instead of screenshots, and verifies once at the end. Link mode is the recommended default.
 - job-search and setup add local language equivalents of the search terms (for example German titles for searches in Germany) when the profile's language limits allow roles in that language, saved as `# local: <code>` lines in `saved_searches`.
+- Chrome extension (`extension/`): reads `JobPosting` data from ad pages and result cards from search pages with learned per-portal list profiles, reads matching ads in the background with the user's session (LinkedIn off by default), and saves to `feeds/browser-<date>.json` in the feed format. "Map the pending portal" lets Claude write a portal's profile once from a captured page.
+- Signals on every feed and browser posting: ad language, required language levels, minimum years.
+- Matching before scoring (`job-search/references/matching.md`): pre-filters on duplicates, excludes, title relevance, location, required language level, years, recency and closing date; `_profile/feedback.md` with the user's rules, verdict overrides, and outcomes by source and term, maintained by tracker-sync and used by job-search and job-intake.
 - Search reports include a cost line: feeds, fetches and browser pages used.
 
 ## 0.6.0

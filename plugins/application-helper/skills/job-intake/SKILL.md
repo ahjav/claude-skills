@@ -15,6 +15,7 @@ Locate the workspace first (local folder or Notion; see `../setup/references/sto
 
 Sources: a batch from job-search (links or page text, with the query and portal that found each), pasted URLs, open browser tabs, saved jobs pages (LinkedIn jobs tracker, Indeed saved jobs, StepStone merkliste), or pasted text.
 
+- **Extension postings** (`source: browser`): a `kind: ad` posting carries the full description; use it and fetch nothing. A `kind: listing` has no description: read it like a link below (ATS feed first). One marked `needsBrowser` needs a single browser read with get_page_text.
 - **Feed script postings** (from job-search, or when the user points to `feeds/`) already carry the full description, location, dates and links: use them as the ad text and fetch nothing. For Greenhouse ones, fetch only the questions (`?questions=true`) for step 5. A posting with a `note` saying the description did not load is read like any other link.
 - **Detect the applicant system first.** Match the ad or apply link against the board URL shapes in `../job-search/references/portals.md` (ATS feeds), or take the `ats:` value job-search passed. When it is Greenhouse, Lever or Ashby, read the ad from the feed's per-job detail with WebFetch, asking for the plain text description, location, salary band and posted date. This is smaller than the rendered page and works for links found on LinkedIn or Indeed too: follow the apply link to the ATS instead of opening the portal page. For Greenhouse also ask for the application questions (`?questions=true`): label, type, required, options, character limits, and keep them for step 5.
 - A company resolved this way that is not in `ats_boards` gets added there (`{name, ats, slug}`), so job-search watches its feed from now on. Mention additions in the output. Personio, SmartRecruiters and Workable links also get their **ATS** line and an `ats_boards` entry (the feed script reads those boards), but their pages refuse fetching: when the posting is not in the script output, read it as below.
@@ -45,7 +46,11 @@ Score against the profile, not against an ideal candidate:
 
 Any broken hard constraint (for example C1 language required when the profile rules it out, or a professional license or registration the user does not hold: nursing registration, teaching qualification, driving license class, bar admission, security clearance) caps the score at 40, whatever the rest. For employer sites (UN, EU, government, academic), also check citizenship, required official languages and degree level as hard constraints, and read grades with the table in `../job-search/references/employer-sites.md`.
 
+Before scoring, read **Rules** in `_profile/feedback.md` (`../job-search/references/matching.md`): a rule that matches the ad moves the score by up to 10 points, named in the one-line reason. Rules never lift a broken hard constraint. Use the ad's `signals` when present for the language and years checks, and quote the evidence sentence.
+
 Verdict from config thresholds: Apply, Maybe, Skip.
+
+When the user disagrees with a verdict ("apply anyway", "skip this one, it's an agency"), record it under **Overrides** in `_profile/feedback.md` with the reason they gave, and add a **Rules** line only when they state it as a general rule.
 
 ## 5. File each role
 

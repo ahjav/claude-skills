@@ -1,6 +1,6 @@
 ---
 name: job-search
-description: This skill searches the user's job portals and employer career sites (UN, EU, government, universities, companies) for new postings with their search terms, filters them by the configured experience level, and validates every hit with job-intake. Use when the user says "find jobs", "search for jobs", "look for new postings", "search LinkedIn for", "run my job search", "any new roles for nursing", "check the UN careers site", "search government jobs", or when a scheduled job search run starts.
+description: This skill searches the user's job portals and employer career sites (UN, EU, government, universities, companies) for new postings with their search terms, filters them by the configured experience level, and validates every hit with job-intake. Use when the user says "find jobs", "search for jobs", "look for new postings", "search LinkedIn for", "run my job search", "any new roles for nursing", "check the UN careers site", "search government jobs", "map the pending portal", or when a scheduled job search run starts.
 ---
 
 # Job search
@@ -25,6 +25,8 @@ When the user names an employer or sector in the message ("anything at the UN", 
 
 ## 2. ATS boards first
 
+**Extension output.** With `browser_extension: yes`, also read `feeds/browser-<yyyy-mm-dd>.json` files written since the last run (`references/browser-extension.md`): full ads (`kind: ad`, with description and signals) and listings from result pages the user saved (`kind: listing`). They go through the same pre-filters as everything else. If `_profile/portals/_pending/` holds captures, map them first (below, Pending portal captures).
+
 **Feed script output.** With `feed_script: yes`, read the day files in `feeds/` written since the last run (`feeds/<yyyy-mm-dd>.json`, see `references/feed-script.md`): their `postings` are the new matches, with descriptions, and the last entry in `runs` says which boards were read and which failed. Use these instead of fetching; the script already applied terms, excludes and locations, so the title pre-filter below only re-checks the level. A board the script read successfully today is done. When no file is newer than the last run, or a board failed in it, say so in the report with the command to run the script, and fetch only the Greenhouse, Lever and Ashby boards yourself as below.
 
 Without the script, for each Greenhouse, Lever or Ashby entry in `ats_boards`, WebFetch its listing feed (`references/portals.md`, ATS feeds) and ask only for postings whose title matches the terms, with id, title, location, work mode, date and URL. Apply the recency window to the feed's date. No browser; call again with the given `offset` only when WebFetch says the feed was cut off. Mark a board whose feed fails (404, empty, changed shape) in the run report; after two failed runs in a row, open its careers page once to re-resolve the slug or ATS. Personio, SmartRecruiters and Workable boards are never fetched by Claude: without fresh script output, list them as not covered and recommend setting up the script.
@@ -34,7 +36,7 @@ Without the script, for each Greenhouse, Lever or Ashby entry in `ats_boards`, W
 Then the portals and employer sites, using the route recorded in config (`access: fetch | browser | api`), learned on first use:
 
 1. **API or fetch**: portals with a public API or plain HTML listing (see `references/portals.md`). Use WebFetch on the search URL built from the portal's `url_template`, and ask for the listing fields only, never the whole page.
-2. **Browser**: only on an interactive run, only for portals whose `role` is `search`, or `discovery` on a day in `discovery_days` (a browser portal without `role`, from an older config, counts as `discovery`). Skip the rest and say so in one line of the report. Prefer the built-in browser (the Claude app's own browser pane); read the `built-in-browser` skill before its first use. Fall back to Claude in Chrome only when the built-in browser is unavailable and the user allows it (read the `chrome-browser` skill first). Open the search URL with the recency filter already in it, read results once with get_page_text (not screenshots, not read_page per element), and page only while new results are inside the window, at most `max_results_per_query`.
+2. **Browser**: with `browser_extension: yes`, do not read browser portals yourself: list each one's search link in the report for the user to open and save with the extension (two clicks per portal, no usage). Without the extension: only on an interactive run, only for portals whose `role` is `search`, or `discovery` on a day in `discovery_days` (a browser portal without `role`, from an older config, counts as `discovery`). Skip the rest and say so in one line of the report. Prefer the built-in browser (the Claude app's own browser pane); read the `built-in-browser` skill before its first use. Fall back to Claude in Chrome only when the built-in browser is unavailable and the user allows it (read the `chrome-browser` skill first). Open the search URL with the recency filter already in it, read results once with get_page_text (not screenshots, not read_page per element), and page only while new results are inside the window, at most `max_results_per_query`.
 3. **No browser available**, or a browser portal skipped by its role: list its search link in the final report so the user can open it. Never work around a block with curl, mirrors or caches.
 
 ### Discovery: turn portal hits into feeds
@@ -55,9 +57,13 @@ Record the route that worked back in config (`access:`), so later and scheduled 
 
 Sign in: never enter credentials. If a portal needs the user signed in, ask the user to sign in in the browser pane once; the session persists. Decline non-essential cookies.
 
+### Pending portal captures
+
+When the user says "map the pending portal", or a run finds files in `_profile/portals/_pending/`, write a list profile for each with the steps in `references/browser-extension.md` (Mapping a pending capture). This is the one place a portal's page structure goes through the model, once per site.
+
 ## 4. Collect the candidates
 
-For each query and portal, collect title, company, location, work mode, posted date, link, and the years or level shown in the listing. Then:
+For each query and portal, collect title, company, location, work mode, posted date, link, and the years or level shown in the listing. Then apply the pre-filters and learned rules in `references/matching.md`; the bullets below are the parts specific to listings:
 
 - **Dedupe** by link and by company plus title across portals and against `pipeline.md` (any stage, including Closed). Note re-posts of roles the user was already rejected from instead of dropping them silently.
 - **Experience pre-filter** (config `experience_filter`, see below). Apply it to what the listing shows; when the listing has no years or level, keep the posting and let job-intake read the full ad.
@@ -75,7 +81,7 @@ Compare the ad's minimum years and level with the user's years (profile.md) and 
 
 Ranges ("3 to 5 years") use the lower bound. "Nice to have" years do not count. A user with 0 to 1 years and an ad asking at least 4 is out for exact and stretch and kept only for long_stretch. The same level applies to must-have requirements (skills, tools, licenses, certifications, specializations) when `filter_requirements: yes` (older configs: `filter_stack`): exact keeps ads whose must-haves are all in facts.md, stretch allows one missing must-have, long_stretch also allows closely related ones (a different tool for the same job, a neighboring specialization). A legally required license or registration the user lacks is never stretched; it is a hard constraint in job-intake.
 
-Count what each filter dropped; it goes in the report.
+Count what each filter dropped; it goes in the report, with the list of dropped titles so the user can override any.
 
 ## 5. Validate with job-intake
 
@@ -85,7 +91,7 @@ On a large batch (more than 15), show the list and the count per portal first on
 
 ## 6. Report
 
-Write `searches/<yyyy-mm-dd>-<hhmm>.md` in the workspace (a Search runs row with `storage: notion`): queries, portals and route used, counts found / deduped / filtered / validated, the job-intake result table, uncovered or skipped portals with their search links, companies added to `ats_boards`, failing feeds, and listings held back. Add a cost line: number of feeds fetched, pages fetched, and pages read in the browser, with the share of Apply roles that came from feeds. A rising browser count is the signal to add more companies to `ats_boards`. Update `last_run` per portal and board in config.
+Write `searches/<yyyy-mm-dd>-<hhmm>.md` in the workspace (a Search runs row with `storage: notion`): queries, portals and route used, counts found / deduped / filtered / validated, the job-intake result table, uncovered or skipped portals with their search links, companies added to `ats_boards`, failing feeds, and listings held back. Add a cost line: number of feeds fetched, pages fetched, and pages read in the browser, with the share of Apply roles that came from feeds. A rising browser count is the signal to add more companies to `ats_boards` or set up the extension. Add the terms and sources `references/matching.md` flags as never producing Apply roles, as suggestions. Update `last_run` per portal and board in config.
 
 To the user: lead with counts per verdict, then the short job-intake table (company, role, score, verdict, one-line reason), then one line per portal that was not covered and why. Offer tailor-application for the Apply roles.
 

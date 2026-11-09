@@ -23,6 +23,7 @@ filter_requirements: no    # yes = same level applies to must-have skills, tools
 #   language: de           # personio only, when the ads exist only in German
 ats_boards:
 feed_script: no            # yes = fetch-feeds.mjs runs on the user's computer and writes feeds/
+browser_extension: no      # yes = the Chrome extension saves ads and listings to feeds/browser-<date>.json
 feed_locations:            # feed script location filter, e.g. Berlin, Germany, Remote (remote roles always pass)
 
 ## Portals
