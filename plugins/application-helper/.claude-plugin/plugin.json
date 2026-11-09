@@ -1,7 +1,7 @@
 {
   "name": "application-helper",
   "displayName": "Application Helper",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Run a job search end to end, in any field: search job portals and employer career sites, intake and score job ads, tailor CVs and cover letters from verified facts, walk through applications in the browser, and keep a pipeline and tracker in sync.",
   "author": {
     "name": "ahjav"
