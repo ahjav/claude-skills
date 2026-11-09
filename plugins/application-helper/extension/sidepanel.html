@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Application Helper</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header>
+    <h1>Application Helper</h1>
+    <div id="workspace" class="row">
+      <span id="workspace-name" class="muted">No workspace</span>
+      <button id="connect">Connect workspace</button>
+    </div>
+  </header>
+
+  <section id="page">
+    <h2>This page</h2>
+    <p id="page-url" class="muted small"></p>
+    <div id="page-body"><p class="muted">Open a job ad or a search results page.</p></div>
+  </section>
+
+  <section>
+    <h2>Settings</h2>
+    <label class="row small"><input type="checkbox" id="opt-linkedin"> Read LinkedIn ads in the background (against LinkedIn's terms; risks your account)</label>
+    <label class="row small">Ads read per batch <input type="number" id="opt-cap" min="1" max="60" value="30"></label>
+  </section>
+
+  <section>
+    <h2>Log</h2>
+    <ol id="log" class="small"></ol>
+  </section>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
