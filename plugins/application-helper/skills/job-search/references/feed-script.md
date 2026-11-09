@@ -44,7 +44,7 @@ macOS or Linux (`crontab -e`):
 | `feeds/latest.json` | every posting matching now, with `firstSeen` |
 | `feeds/state.json` | ids seen before, last result per board; forgets ids not seen for 60 days |
 
-Each posting: `id` (`<ats>/<slug>/<jobId>`), `ats`, `slug`, `company`, `jobId`, `title`, `location`, `workMode`, `postedAt`, `url`, `applyUrl`, `salary` (when the feed has it), `matchedTerms`, `firstSeen`, `new`, `description` (plain text, at most 12,000 characters), and `note` when the description could not be loaded.
+Each posting: `id` (`<ats>/<slug>/<jobId>`), `ats`, `slug`, `company`, `jobId`, `title`, `location`, `workMode`, `postedAt`, `url`, `applyUrl`, `salary` (when the feed has it), `matchedTerms`, `firstSeen`, `new`, `description` (plain text, at most 12,000 characters), `signals` (ad language, required language levels, minimum years; see `matching.md`), and `note` when the description could not be loaded.
 
 ## Troubleshooting
 

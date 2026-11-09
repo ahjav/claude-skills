@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+Search, extraction and matching.
+- Chrome extension (`extension/`): reads `JobPosting` data from ad pages and result cards from search pages with learned per-portal list profiles, reads matching ads in the background with the user's session (LinkedIn off by default), and saves to `feeds/browser-<date>.json` in the feed format. "Map the pending portal" lets Claude write a portal's profile once from a captured page.
+- Signals on every feed and browser posting: ad language, required language levels, minimum years.
+- Matching before scoring (`job-search/references/matching.md`): pre-filters on duplicates, excludes, title relevance, location, required language level, years, recency and closing date; `_profile/feedback.md` with the user's rules, verdict overrides, and outcomes by source and term, maintained by tracker-sync and used by job-search and job-intake.
+
 ## 0.7.0
 Lower usage: the browser is now a last resort.
 - `ats_boards` in config: target companies searched through their applicant system feed first on every run, with no browser. Claude reads Greenhouse, Lever and Ashby feeds itself.

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Application Helper",
+  "version": "0.1.0",
+  "description": "Reads job ads and search result lists into your Application Helper workspace, without spending Claude usage.",
+  "minimum_chrome_version": "116",
+  "permissions": ["sidePanel", "scripting", "storage", "tabs"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "action": { "default_title": "Application Helper" }
+}

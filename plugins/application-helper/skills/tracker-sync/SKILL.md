@@ -30,6 +30,7 @@ Folder per stage depends on `folder_mode`:
 2. Update its `pipeline.md` row: stage, reason or next step, Applied date when moving to Applied, Updated date.
 3. Move the folder when the stage's folder differs. On the user's computer use the device shell or bridge; never delete, only move. Keep the folder name.
 4. Append a dated line to the role's `log.md` (what changed and why).
+4a. Update **Outcomes by source and term** in `_profile/feedback.md` (`../job-search/references/matching.md`) from the role's `ad.md` source and query line. A skip or withdrawal with a reason the user states as general goes to **Rules**.
 5. Sync the external tracker (below).
 
 Batch moves are fine ("mark today's 9 as applied"): show the list before moving more than five roles.
@@ -65,6 +66,7 @@ On request or at the end of a session, report from `pipeline.md`:
 - Interviews coming up, from the roles' `log.md`.
 - Roles waiting for a reply longer than 14 days: suggest a follow up.
 - Closed this period with reasons, and any pattern (for example several "position closed" means intake should be faster).
+- From `_profile/feedback.md`: which sources and terms produced the interviews, and which produced none in their last 30 postings.
 
 Keep it to a short table and two or three lines.
 

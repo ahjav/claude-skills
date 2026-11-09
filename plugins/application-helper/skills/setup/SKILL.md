@@ -63,6 +63,8 @@ Then offer the feed script (`../job-search/references/feed-script.md`) when the 
 
 When saving `saved_searches`, add local language equivalents of the terms for each search country as job-search describes (step 1, Local language terms), within the profile's language limits, and show them in one line.
 
+Offer the Chrome extension (`../../extension/README.md`) when the user searches portals that block AI fetching (LinkedIn, Indeed, StepStone) and uses Chrome: it reads ads and result lists in their own browser and saves them to the workspace with no usage. On yes: copy the plugin's `extension` folder to `<workspace>/_profile/tools/extension`, give the three install steps from its README, and set `browser_extension: yes`.
+
 Then ask which job portals the user uses (free text, plus a multi-select of the portals in `../job-search/references/portals.md` that fit their country and field: the general ones plus the "By field" rows for their occupation). Record each under `portals` in config with its `url_template`, the `access` route from the catalog, and `role` (`search` for fetch and api portals, `discovery` for browser portals unless the user wants it on every run). Ask on which day discovery portals run (`discovery_days`, default Monday). Ask for:
 
 - Search terms (several allowed), locations, work mode, and terms to exclude. Save as `saved_searches` and `exclude_terms`.
