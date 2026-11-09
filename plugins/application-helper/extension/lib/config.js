@@ -52,3 +52,55 @@ export function worthReading({ terms, exclude }, title) {
     return (key.length ? key : tw).every(w => set.has(w));
   });
 }
+
+// ---------- portals and searches, for the Searches section ----------
+
+function items(lines) {
+  const out = [];
+  let cur = null;
+  for (const line of lines) {
+    const m = line.match(/^\s*-\s+(.*)$/);
+    const body = m ? m[1] : line.trim();
+    if (m) out.push((cur = {}));
+    const kv = body.match(/^([A-Za-z_]+):\s*(.*)$/);
+    if (kv && cur) cur[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
+  }
+  return out;
+}
+
+// Portals and employer sites that have a search URL with {q}, and every saved search.
+// API portals are left out: their results are JSON, which Claude reads directly.
+export function searchPlan(text) {
+  const portals = items(block(text, 'portals'))
+    .map(p => ({ name: p.name, access: (p.access || '').split(/\s/)[0], role: p.role, template: p.url_template }))
+    .filter(p => p.name && p.template && /\{q\}/.test(p.template) && p.access !== 'api');
+  const sites = items(block(text, 'employer_sites'))
+    .map(s => ({ name: s.name, access: (s.access || '').split(/\s/)[0], role: 'employer', template: s.search_url_template || '' }))
+    .filter(s => s.name && /\{q\}/.test(s.template));
+  const searches = block(text, 'saved_searches').map(l => {
+    const [terms = '', location = '', mode = ''] = l.replace(/^\s*-\s+/, '').split('|').map(s => s.trim());
+    return { terms: list(terms), location, mode };
+  });
+  const seen = new Set();
+  const terms = [];
+  for (const s of searches) for (const term of s.terms) {
+    if (seen.has(term)) continue;
+    seen.add(term);
+    terms.push({ term, location: s.location, mode: s.mode });
+  }
+  return { portals: [...portals, ...sites], terms };
+}
+
+// {q} and {loc} in a URL path become slugs ("backend-engineer"), in a query string they are
+// URL-encoded. "any" or an empty location leaves {loc} empty.
+export function searchUrl(template, term, location) {
+  const loc = !location || /^(any|anywhere)$/i.test(location) ? '' : location;
+  const q = template.indexOf('?');
+  // German letters as German sites spell them in URLs (muenchen, not munchen)
+  const slug = s => s.toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const fill = (part, inPath) => part
+    .replace(/\{q\}/g, inPath ? slug(term) : encodeURIComponent(term))
+    .replace(/\{loc\}/g, inPath ? slug(loc) : encodeURIComponent(loc));
+  return q < 0 ? fill(template, true) : fill(template.slice(0, q), true) + fill(template.slice(q), false);
+}

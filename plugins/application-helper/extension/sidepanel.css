@@ -31,3 +31,9 @@ ul.cards li .meta { color: var(--muted); font-size: 12px; }
 #log { padding-left: 18px; margin: 0; max-height: 220px; overflow: auto; }
 input[type=number] { width: 4em; }
 code { font-size: 11px; word-break: break-all; }
+details summary { cursor: pointer; margin: 8px 0 4px; }
+#plan h3 { font-size: 12px; margin: 10px 0 4px; }
+#plan .chips { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+#plan a { color: var(--accent); text-decoration: none; }
+#plan a.done { color: var(--muted); text-decoration: line-through; }
+#plan label { display: inline-flex; gap: 4px; align-items: center; }

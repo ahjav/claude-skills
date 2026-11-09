@@ -2,13 +2,14 @@ import { readJobPosting, probeList, extractList } from './lib/page.js';
 import { fromJobPosting, fromCard } from './lib/posting.js';
 import { guessProfile, profileFor, profileHealth } from './lib/profile.js';
 import { savedWorkspace, connectWorkspace, ensurePermission, readJsonDir, writeJson, savePostings } from './lib/store.js';
-import { searchConfig, worthReading } from './lib/config.js';
+import { searchConfig, worthReading, searchPlan, searchUrl } from './lib/config.js';
 
 const $ = id => document.getElementById(id);
 const today = () => new Date().toLocaleDateString('sv');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const state = { root: null, ready: false, profiles: {}, search: { terms: [], exclude: [] }, tab: null, view: null };
+const state = { root: null, ready: false, profiles: {}, search: { terms: [], exclude: [] }, plan: { portals: [], terms: [] }, tab: null, view: null, current: null };
+const picks = { portalsOff: [], termsOff: [], date: '', done: [], initialized: false };
 const settings = { linkedin: false, cap: 30 };
 
 function log(msg, cls = '') {
@@ -39,11 +40,97 @@ async function loadWorkspace(interactive) {
     state.profiles = await readJsonDir(root, '_profile/portals');
     try {
       const cfg = await (await (await root.getDirectoryHandle('_profile')).getFileHandle('config.md')).getFile();
-      state.search = searchConfig(await cfg.text());
+      const text = await cfg.text();
+      state.search = searchConfig(text);
+      state.plan = searchPlan(text);
     } catch { /* keep defaults */ }
   }
   renderWorkspace();
+  renderPlan();
 }
+
+// ---------- searches: the user's portals x saved terms ----------
+
+const searchKey = (portal, term) => `${portal}|${term}`;
+
+function queue() {
+  const portals = state.plan.portals.filter(p => !picks.portalsOff.includes(p.name));
+  const terms = state.plan.terms.filter(t => !picks.termsOff.includes(t.term));
+  // one portal at a time, so sign-ins and cookie banners are dealt with once
+  return portals.flatMap(p => terms.map(t => ({ portal: p.name, term: t.term, url: searchUrl(p.template, t.term, t.location) })));
+}
+
+async function savePicks() {
+  await chrome.storage.local.set({ picks });
+}
+
+async function loadPicks() {
+  const { picks: saved } = await chrome.storage.local.get({ picks: null });
+  if (saved) Object.assign(picks, saved);
+  if (picks.date !== today()) Object.assign(picks, { date: today(), done: [] });
+}
+
+function openSearch(item) {
+  state.current = { ...item, at: Date.now() };
+  if (!picks.done.includes(searchKey(item.portal, item.term))) picks.done.push(searchKey(item.portal, item.term));
+  savePicks();
+  renderPlan();
+  activeTab().then(tab => (tab && /^https?:/.test(tab.url || '') ? chrome.tabs.update(tab.id, { url: item.url }) : chrome.tabs.create({ url: item.url })));
+}
+
+function renderPlan() {
+  const { portals, terms } = state.plan;
+  // first time: leave out portals Claude can fetch without a browser; the user can tick them
+  if (!picks.initialized && portals.length) {
+    picks.portalsOff = portals.filter(p => p.access === 'fetch' || p.access === 'api').map(p => p.name);
+    picks.initialized = true;
+    savePicks();
+  }
+  const q = queue();
+  const done = q.filter(i => picks.done.includes(searchKey(i.portal, i.term))).length;
+  const next = q.find(i => !picks.done.includes(searchKey(i.portal, i.term)));
+  $('plan-summary').textContent = !state.ready
+    ? 'Connect your workspace to see your portals and search terms.'
+    : !portals.length
+      ? 'No portals with a search URL in config (portals: url_template with {q}).'
+      : `${q.length} searches today (${portals.length - picks.portalsOff.length} portals × ${terms.length - picks.termsOff.length} terms), ${done} done${next ? ` · next: ${next.portal}, "${next.term}"` : ''}${q.length > 40 ? ' · untick terms or portals below to cut this down' : ''}`;
+  const btn = $('next-search');
+  btn.disabled = !next;
+  btn.textContent = next ? `Next search (${done + 1} of ${q.length})` : q.length ? 'All searches done today' : 'Next search';
+  $('reset-searches').disabled = !done;
+
+  const toggle = (listName, value) => e => {
+    const arr = picks[listName];
+    if (e.target.checked) picks[listName] = arr.filter(v => v !== value);
+    else if (!arr.includes(value)) arr.push(value);
+    savePicks();
+    renderPlan();
+  };
+  $('plan').replaceChildren(
+    el('h3', {}, 'Terms'),
+    el('div', { class: 'chips small' }, terms.map(t => el('label', {},
+      el('input', { type: 'checkbox', ...(picks.termsOff.includes(t.term) ? {} : { checked: '' }) }),
+      t.term,
+    ))),
+    ...portals.map(p => el('div', {},
+      el('h3', {}, el('label', {}, el('input', { type: 'checkbox', ...(picks.portalsOff.includes(p.name) ? {} : { checked: '' }) }), `${p.name}`), el('span', { class: 'muted' }, ` ${p.access || ''}`)),
+      picks.portalsOff.includes(p.name) ? null : el('div', { class: 'chips small' }, terms.filter(t => !picks.termsOff.includes(t.term)).map(t => {
+        const item = { portal: p.name, term: t.term, url: searchUrl(p.template, t.term, t.location) };
+        return el('a', { href: item.url, class: picks.done.includes(searchKey(p.name, t.term)) ? 'done' : '', onclick: e => { e.preventDefault(); openSearch(item); } }, t.term);
+      })),
+    )),
+  );
+  // wire the checkboxes (el() only wires onclick)
+  const termBoxes = $('plan').querySelectorAll('.chips > label > input');
+  terms.forEach((t, i) => termBoxes[i]?.addEventListener('change', toggle('termsOff', t.term)));
+  $('plan').querySelectorAll('h3 > label > input').forEach((box, i) => box.addEventListener('change', toggle('portalsOff', portals[i].name)));
+}
+
+$('next-search').addEventListener('click', () => {
+  const next = queue().find(i => !picks.done.includes(searchKey(i.portal, i.term)));
+  if (next) openSearch(next);
+});
+$('reset-searches').addEventListener('click', () => { picks.done = []; savePicks(); renderPlan(); });
 
 function renderWorkspace() {
   const name = $('workspace-name');
@@ -219,7 +306,10 @@ async function saveList(readAds) {
     log('Reading ads needs access to the ad pages; saved listings only.', 'warn');
     toRead = [];
   }
-  const r = await savePostings(state.root, today(), listings, { url: state.tab.url, kind: 'list', profile: state.view.profile.by });
+  const cur = state.current;
+  const fromSearch = cur && new URL(cur.url).host === new URL(state.tab.url).host ? cur : null;
+  if (fromSearch) for (const l of listings) Object.assign(l, { query: fromSearch.term, portalName: fromSearch.portal });
+  const r = await savePostings(state.root, today(), listings, { url: state.tab.url, kind: 'list', profile: state.view.profile.by, ...(fromSearch ? { portal: fromSearch.portal, query: fromSearch.term } : {}) });
   log(`Saved ${listings.length} listings to ${r.path} (${r.added} new)`, 'good');
   if (skippedLinkedIn.length) log(`${skippedLinkedIn.length} LinkedIn ads not read in the background (setting off).`, 'warn');
   if (toRead.length) readAdsInBackground(toRead);
@@ -235,7 +325,7 @@ async function readAdsInBackground(listings) {
       const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
       const ld = readJobPosting(doc);
       if (!ld.postings.length) throw new Error('no JobPosting data');
-      full.push(fromJobPosting(ld.postings[0], l.url, today(), l.id));
+      full.push({ ...fromJobPosting(ld.postings[0], l.url, today(), l.id), ...(l.query ? { query: l.query, portalName: l.portalName } : {}) });
     } catch (e) {
       failed.push({ ...l, needsBrowser: true, note: `not read in background: ${e.message}` });
     }
@@ -261,6 +351,7 @@ chrome.tabs.onActivated.addListener(() => analyze());
 chrome.tabs.onUpdated.addListener((id, info, tab) => { if (tab.active && info.status === 'complete') analyze(); });
 
 await loadSettings();
+await loadPicks();
 await loadWorkspace(false);
 analyze();
 
