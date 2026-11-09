@@ -4,6 +4,8 @@ Starting points for config. URL patterns change; treat every template as "last k
 
 Access: **fetch** = WebFetch usually works, **browser** = blocks AI fetching or renders with JavaScript, **api** = public JSON endpoint.
 
+Cost: a browser portal costs many times more than a fetch or api one, because every page is read into the conversation and paged through. Record browser portals with `role: discovery` by default: they run on `discovery_days` to find companies, and job-search then adds those companies to `ats_boards` so later runs reach them through a feed. The cheapest source of all is at the end of this file: ATS feeds.
+
 ## General (all fields)
 
 | Portal | Access | Search URL template | Recency filter |
@@ -57,7 +59,24 @@ Ask the user's field in setup and offer the matching rows. Search URLs here are 
 | Tech | Dice `https://www.dice.com` (US), Built In `https://builtin.com/jobs` (US), GermanTechJobs `https://germantechjobs.de` and Get in IT `https://www.get-in-it.de` (DE), Berlin Startup Jobs `https://berlinstartupjobs.com`, Wellfound `https://wellfound.com/jobs`, Remotive (API `https://remotive.com/api/remote-jobs?search={q}`), We Work Remotely `https://weworkremotely.com` |
 | Students, graduates, apprenticeships | Absolventa `https://www.absolventa.de` and Ausbildung.de `https://www.ausbildung.de` (DE), JobTeaser `https://www.jobteaser.com` (FR/EU), Handshake `https://joinhandshake.com` (US), Gradcracker / Prospects (UK) |
 
-## Company career pages
+## ATS feeds (first choice)
 
-ATS boards usually allow fetching and are the most reliable source once a company is known:
-Greenhouse `https://boards.greenhouse.io/<company>`, Lever `https://jobs.lever.co/<company>`, Ashby `https://jobs.ashbyhq.com/<company>`, Personio `https://<company>.jobs.personio.de`, SmartRecruiters `https://jobs.smartrecruiters.com/<company>`, Workable `https://apply.workable.com/<company>`. Many also expose JSON (`https://boards-api.greenhouse.io/v1/boards/<company>/jobs`, `https://api.lever.co/v0/postings/<company>`). List watched companies under `watch_companies` in config.
+Most companies publish openings through an applicant tracking system with a public feed. A feed returns every opening as structured data: no browser, no page rendering, nothing to scroll, and it reaches the cloud. Once a company is known, its feed is the cheapest and most reliable source, so job-search runs `ats_boards` before any portal.
+
+All six systems below go under `ats_boards`. The feed script (`feed-script.md`) reads all of them on the user's computer. Without it, Claude reads only the first three with WebFetch.
+
+Feeds that WebFetch can read (checked November 2026):
+
+| ATS | Board URL shapes (detect from links) | Listing feed | Per-job detail | Questions in feed |
+|---|---|---|---|---|
+| Greenhouse | `boards.greenhouse.io/<slug>`, `job-boards.greenhouse.io/<slug>`, `job-boards.eu.greenhouse.io/<slug>`, `?gh_jid=` on a company site | `https://boards-api.greenhouse.io/v1/boards/<slug>/jobs` (no descriptions; add `?content=true` only for a small board) | `https://boards-api.greenhouse.io/v1/boards/<slug>/jobs/<id>?questions=true`: description in `content`, plus the form | Yes: label, required, field type and name, options |
+| Lever | `jobs.lever.co/<slug>`, `jobs.eu.lever.co/<slug>` | `https://api.lever.co/v0/postings/<slug>?mode=json` (EU: `api.eu.lever.co`); includes `descriptionPlain`, `workplaceType`, `applyUrl` | `…/postings/<slug>/<id>` | No |
+| Ashby | `jobs.ashbyhq.com/<slug>` | `https://api.ashbyhq.com/posting-api/job-board/<slug>?includeCompensation=true`; includes `descriptionPlain`, `isRemote`, `workplaceType`, `applyUrl`, compensation | in the listing | No |
+
+Systems whose public pages and feeds refuse AI fetching (robots.txt), so WebFetch cannot read them and Claude never works around that: **Personio** (`<slug>.jobs.personio.de` / `.com`, very common in Germany; feed `https://<slug>.jobs.personio.de/xml`), **SmartRecruiters** (`jobs.smartrecruiters.com/<slug>`; feed `https://api.smartrecruiters.com/v1/companies/<slug>/postings`), **Workable** (`apply.workable.com/<slug>`). Record those companies under `ats_boards` too; the feed script covers them. Without the script, they are covered only when the company's own careers page lists the openings (then also add it under `employer_sites` with `access: fetch`), or through the browser on interactive runs.
+
+How to read a feed with WebFetch: ask for only what the search needs, so the full JSON never enters the conversation. For example: "List postings whose title matches any of: backend engineer, kotlin, java. For each give id, title, location, remote or hybrid if stated, updated or published date, and the posting URL. Ignore the rest." WebFetch reads about the first 100,000 characters of a feed; a large board (Lever and Ashby include full descriptions, so a few dozen openings already fill that) comes back cut off and the result says so. Then call again with the `offset` it gives until the feed is covered.
+
+Resolving a company to its feed: open its careers page once (WebFetch), look for the board URL shapes above in links or embedded scripts, then confirm the feed returns data. Record `{name, ats, slug}` under `ats_boards`. For Personio, SmartRecruiters and Workable, read the slug from the board link itself (the WebFetch check will be refused). A company on Workday, SuccessFactors, Taleo or a custom portal goes under `employer_sites` instead.
+
+Older configs list board URLs under `watch_companies`; convert each to an `ats_boards` entry when its ATS is one of the six above.

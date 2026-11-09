@@ -9,13 +9,16 @@ Turn job links from any source into scored, filed roles in the pipeline.
 
 ## Before starting
 
-Locate the workspace first (local folder or Notion; see `../setup/references/storage-notion.md`, Finding the workspace); with `storage: notion`, the paths below map to Notion pages and the Pipeline database. Read `_profile/profile.md`, `_profile/facts.md`, `_profile/config.md` and `pipeline.md`. If `_profile/` is missing, run the setup skill first.
+Locate the workspace first (local folder or Notion; see `../setup/references/storage-notion.md`, Finding the workspace); with `storage: notion`, the paths below map to Notion pages and the Pipeline database. Read `_profile/profile.md`, `_profile/facts.md`, `_profile/config.md` and `pipeline.md` once per batch, not once per ad. If `_profile/` is missing, run the setup skill first.
 
 ## 1. Collect the ads
 
 Sources: a batch from job-search (links or page text, with the query and portal that found each), pasted URLs, open browser tabs, saved jobs pages (LinkedIn jobs tracker, Indeed saved jobs, StepStone merkliste), or pasted text.
 
-- Try WebFetch first. LinkedIn, Indeed and StepStone usually block it; then read it in the browser: prefer the built-in browser (the Claude app's own browser), fall back to Claude in Chrome when the user allows it. Read that browser's skill before its first use. Without browser access, ask the user to paste the ad text (or a screenshot) for the blocked links, in one message listing them. Never work around a block with curl or mirrors.
+- **Feed script postings** (from job-search, or when the user points to `feeds/`) already carry the full description, location, dates and links: use them as the ad text and fetch nothing. For Greenhouse ones, fetch only the questions (`?questions=true`) for step 5. A posting with a `note` saying the description did not load is read like any other link.
+- **Detect the applicant system first.** Match the ad or apply link against the board URL shapes in `../job-search/references/portals.md` (ATS feeds), or take the `ats:` value job-search passed. When it is Greenhouse, Lever or Ashby, read the ad from the feed's per-job detail with WebFetch, asking for the plain text description, location, salary band and posted date. This is smaller than the rendered page and works for links found on LinkedIn or Indeed too: follow the apply link to the ATS instead of opening the portal page. For Greenhouse also ask for the application questions (`?questions=true`): label, type, required, options, character limits, and keep them for step 5.
+- A company resolved this way that is not in `ats_boards` gets added there (`{name, ats, slug}`), so job-search watches its feed from now on. Mention additions in the output. Personio, SmartRecruiters and Workable links also get their **ATS** line and an `ats_boards` entry (the feed script reads those boards), but their pages refuse fetching: when the posting is not in the script output, read it as below.
+- Otherwise try WebFetch on the ad page, asking for the ad text only. LinkedIn, Indeed and StepStone usually block it; then read it in the browser: prefer the built-in browser (the Claude app's own browser), fall back to Claude in Chrome when the user allows it. Read that browser's skill before its first use. Without browser access, ask the user to paste the ad text (or a screenshot) for the blocked links, in one message listing them. Never work around a block with curl or mirrors.
 - For a saved jobs page, read the list first, then each ad.
 - Dedupe against `pipeline.md` by link and by company plus title. For a company already in the pipeline or the user's tracker, note the earlier entry (date, role, outcome) in the new `ad.md`.
 
@@ -62,6 +65,8 @@ With `storage: notion`, create a Pipeline database row instead, with the `ad.md`
 **Earlier contact:** <previous applications to this company, if any>
 **Ad snapshot:** <key responsibilities and requirements, grade, salary band, language, process steps>
 **Process:** <where to apply (ad page, Inspira, EPSO, Interamt...), reference number, required documents, tests>
+**ATS:** <ats>/<slug>/<job id> · apply <direct form URL> (or: unknown)
+**Form questions:** <from the feed when it lists them: label (type, required, limit); otherwise "not in feed">
 ```
 
 Keep the snapshot: ads disappear, and interviews need it.

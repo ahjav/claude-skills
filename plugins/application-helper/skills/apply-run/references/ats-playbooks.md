@@ -2,6 +2,26 @@
 
 Field behavior learned from real runs. Prefer click then type over form_input on React forms.
 
+## Reading a form in one call (all systems)
+
+Read fields once as data instead of screenshots. Run this with the browser's JavaScript tool; it returns every visible field with label, type, required flag, current value, options and length limit. Run it again after filling to find required fields still empty.
+
+```js
+JSON.stringify([...document.querySelectorAll('input,select,textarea')]
+  .filter(e => e.type !== 'hidden' && e.offsetParent !== null)
+  .map(e => ({
+    key: e.name || e.id,
+    label: (e.labels?.[0]?.innerText || e.getAttribute('aria-label') || e.placeholder || '').trim().slice(0, 120),
+    type: e.type || e.tagName.toLowerCase(),
+    required: e.required || e.getAttribute('aria-required') === 'true',
+    filled: (e.type === 'checkbox' || e.type === 'radio') ? e.checked : !!e.value,
+    options: e.tagName === 'SELECT' ? [...e.options].map(o => o.text).slice(0, 30) : undefined,
+    max: e.maxLength > 0 ? e.maxLength : undefined
+  })))
+```
+
+Radios and checkboxes come back one entry per option; group them by `key`. Custom dropdowns (react-select and similar) show as text inputs without options; open one only when its answer is not already obvious from the label.
+
 ## Greenhouse (job-boards.greenhouse.io, job-boards.eu.greenhouse.io)
 - Text fields: click the field, type. form_input values may not stick.
 - Country and phone: country is a searchable dropdown; type the country, press Enter; then type the national number without the country code.

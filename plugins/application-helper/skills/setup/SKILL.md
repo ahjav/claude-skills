@@ -57,14 +57,20 @@ Second question: should the same level apply to must-have requirements such as s
 
 ## 5. Portals, employer sites and searches
 
-Ask which job portals the user uses (free text, plus a multi-select of the portals in `../job-search/references/portals.md` that fit their country and field: the general ones plus the "By field" rows for their occupation). Record each under `portals` in config with its `url_template` and the `access` route from the catalog. Ask for:
+Start with companies, because they are the cheapest source to search: ask for the companies the user would like to work for (free text, any number; offer to suggest some from the profile with a web search). For each, resolve its applicant system feed as described in `../job-search/references/portals.md` (ATS feeds) and record `{name, ats, slug}` under `ats_boards`. A company with no public feed goes under `employer_sites`. Say in one line that these are checked on every run without a browser, and that job-search adds more companies automatically as it finds them on portals.
+
+Then offer the feed script (`../job-search/references/feed-script.md`) when the workspace is a folder on the user's computer, or the user has one for it: it reads every board on their computer, including Personio, SmartRecruiters and Workable, which Claude cannot read, and costs no usage. Recommend it when any of their companies uses one of those three. On yes: copy `../../scripts/fetch-feeds.mjs` (the plugin's `scripts` folder) to `<workspace>/_profile/tools/fetch-feeds.mjs`, ask for `feed_locations`, set `feed_script: yes`, give the run command and the schedule command for their system with the paths filled in, and ask them to run it once and say when done. Check the first `feeds/` file: boards that failed get their slug, `region`, `tld` or `language` fixed now.
+
+When saving `saved_searches`, add local language equivalents of the terms for each search country as job-search describes (step 1, Local language terms), within the profile's language limits, and show them in one line.
+
+Then ask which job portals the user uses (free text, plus a multi-select of the portals in `../job-search/references/portals.md` that fit their country and field: the general ones plus the "By field" rows for their occupation). Record each under `portals` in config with its `url_template`, the `access` route from the catalog, and `role` (`search` for fetch and api portals, `discovery` for browser portals unless the user wants it on every run). Ask on which day discovery portals run (`discovery_days`, default Monday). Ask for:
 
 - Search terms (several allowed), locations, work mode, and terms to exclude. Save as `saved_searches` and `exclude_terms`.
 - Employers that post only on their own site. Ask with AskUserQuestion (multi-select) whether the user targets any of: the UN system or other international organizations, EU institutions, government (their country), universities and research, specific companies. For each picked sector, offer the sites from `../job-search/references/employer-sites.md` as a multi-select, plus free text for any other employer. Record each under `employer_sites` with url, access, sector and where applications are submitted. For an employer not in the catalog, find its careers page and confirm it with the user.
 - When a picked sector has hard constraints the profile does not answer yet (citizenship for EU institutions or civil service, official languages for the UN), ask for them now and add them to profile.md.
 - When a sector needs a different CV shape (UN personal history profile, US federal resume, Europass), mention it so step 6 can add a variant.
 
-Explain that portals and sites marked browser need the Claude app's browser for reading, and that the user may need to sign in there once; Claude never types passwords.
+Explain that portals and sites marked browser need the Claude app's browser for reading, that the user may need to sign in there once (Claude never types passwords), that browser reading uses far more of their usage than feeds, and that scheduled runs skip browser portals.
 
 ## 6. CV and cover letter templates (several allowed)
 
@@ -96,13 +102,13 @@ With `storage: notion`, skip this step: the Pipeline database is the tracker (`t
 
 ## 10. Apply mode
 
-Record `apply_mode` (link, guide, prefill) and `personal_data` (omit, ask, include) in config.
+Record `apply_mode` (link, guide, prefill) and `personal_data` (omit, ask, include) in config. Recommend link mode: answers are prepared per role in `answers.md`, and driving forms in the browser costs much more usage for little saved typing. Keep `browser_budget` at 3 unless the user asks.
 
 ## 11. Schedules and reminders
 
 Claude has no separate reminders app; the way to get Claude to act or notify later is a **scheduled task**, which runs on its own and can send a push or email notification when done. Check what this session offers (ToolSearch "scheduled task trigger"); use the scheduled task tools, never the local cron tools, which vanish when the session ends. Offer with AskUserQuestion (multi-select):
 
-- **Recurring job search** (recommended): a chain of up to three daily tasks, set up as described in `../job-search/references/scheduled-runs.md`. Explain the reason in two lines: a task on the computer sees every portal but runs only when the computer is on; a cloud task always runs but cannot read portals that block AI and can only store results with Notion storage. Then ask:
+- **Recurring job search** (recommended): a chain of up to three daily tasks, set up as described in `../job-search/references/scheduled-runs.md`. Explain in two lines: scheduled runs search the company feeds and portals that allow fetching, never browser portals (those wait for an interactive run, with links in the digest); a cloud task always runs but can only store results with Notion storage, while a task on the computer reaches a local folder but runs only when the computer is on. Then ask:
   - days and time of the main search (default weekdays, 8:00 or 9:00, user's time zone);
   - whether to add the check run one hour later (runs the search if it was missed, then sends the digest) and the fallback around 13:00 (runs it if both were missed). Recommend both when any task needs the computer.
   Place each task (cloud or computer) by the table in that reference. With storage in the session workspace only, do not create search tasks; explain why and offer a computer folder or Notion.
